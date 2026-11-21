@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>나의 실바니안 도감</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Gowun Dodum (따뜻하고 아기자기한 한글 폰트) & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Gowun Dodum"', '"Inter"', 'sans-serif'],
+            num: ['"Inter"', 'sans-serif']
+          },
+          colors: {
+            cream: {
+              50: '#FDFBF7',
+              100: '#F8F3E9',
+              200: '#EFE6D5',
+              300: '#E2D3B9',
+            },
+            sage: {
+              100: '#EBF2EC',
+              200: '#D4E4D7',
+              400: '#8FB396',
+              500: '#6E9677',
+              600: '#53775B',
+            },
+            terracotta: {
+              100: '#FBECE8',
+              400: '#E08E79',
+              500: '#C96F59',
+              600: '#A85440',
+            },
+            cocoa: {
+              600: '#6D584C',
+              700: '#544238',
+              800: '#3D2F27',
+            }
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(84, 66, 56, 0.06)',
+            'card': '0 6px 16px -4px rgba(84, 66, 56, 0.08)',
+            'float': '0 10px 25px -5px rgba(201, 111, 89, 0.45)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 기본 스크롤바 숨김 및 부드러운 터치 스크롤 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #F3EFE6;
+      color: #3D2F27;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* 미보유 아이템 부드러운 흑백/반투명 처리 */
+    .unowned-filter {
+      filter: grayscale(85%) opacity(0.68);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .owned-filter {
+      filter: grayscale(0%) opacity(1);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* 모달 애니메이션 */
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0.5; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    /* 체크박스/하트 바운스 효과 */
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.28); }
+      100% { transform: scale(1); }
+    }
+    .animate-pop {
+      animation: pop 0.25s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center">
+
+  <!-- 모바일 앱 컨테이너 (데스크톱에서는 중앙 정렬된 폰 화면 비율 유지) -->
+  <div id="app" class="w-full max-w-[480px] min-h-screen bg-cream-50 shadow-2xl relative flex flex-col pb-24">
+    
+    <!-- 상단 헤더 & 수집 통계 대시보드 -->
+    <header class="bg-cream-50/90 backdrop-blur-md sticky top-0 z-20 px-5 pt-5 pb-3 border-b border-cream-200/70">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5">
+          <!-- 귀여운 토끼 귀 로고 아이콘 -->
+          <div class="w-10 h-10 rounded-2xl bg-terracotta-100 flex items-center justify-center text-terracotta-500 shadow-inner">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11V4a2 2 0 1 1 4 0v7"/>
+              <path d="M13 11V5a2 2 0 1 1 4 0v6"/>
+              <path d="M6 15a6 6 0 0 1 12 0v2a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-2Z"/>
+              <circle cx="10" cy="15" r="0.8" fill="currentColor"/>
+              <circle cx="14" cy="15" r="0.8" fill="currentColor"/>
+              <path d="M11.5 17.5h1"/>
+            </svg>
+          </div>
+          <div>
+            <button type="button" onclick="openTitleEditModal()" class="group flex items-center gap-1.5 text-left focus:outline-none" title="도감 이름 변경">
+              <h1 id="app-title-display" class="text-xl font-bold text-cocoa-800 tracking-tight leading-tight group-hover:text-terracotta-600 transition">나의 실바니안 도감</h1>
+              <span class="p-1 rounded-lg bg-cream-100 text-cocoa-600 group-hover:bg-terracotta-100 group-hover:text-terracotta-500 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+              </span>
+            </button>
+            <p class="text-xs text-cocoa-600">소중한 숲속 친구들 수집 기록</p>
+          </div>
+        </div>
+        
+        <!-- 백업/설정 버튼 -->
+        <button onclick="openSettingsModal()" aria-label="데이터 백업 및 설정" class="p-2.5 rounded-2xl bg-cream-100 hover:bg-cream-200 text-cocoa-700 transition active:scale-95">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 수집 통계 카드 -->
+      <div class="bg-white rounded-3xl p-4 shadow-soft border border-cream-200/80">
+        <div class="flex justify-between items-end mb-2">
+          <div>
+            <span class="text-xs font-medium text-sage-600 bg-sage-100 px-2.5 py-0.5 rounded-full">도감 달성률</span>
+            <div class="mt-1 flex items-baseline gap-1.5">
+              <span id="stat-percent" class="text-2xl font-bold font-num text-cocoa-800">0%</span>
+              <span id="stat-fraction" class="text-xs text-cocoa-600 font-num">(0 / 0종)</span>
+            </div>
+          </div>
+          <div class="flex gap-2 text-right">
+            <div class="bg-cream-50 px-2.5 py-1.5 rounded-2xl border border-cream-200/60">
+              <p class="text-[10px] text-cocoa-600">총 보유(중복포함)</p>
+              <p id="stat-total-count" class="text-sm font-bold font-num text-sage-600">0개</p>
+            </div>
+            <div class="bg-terracotta-100/50 px-2.5 py-1.5 rounded-2xl border border-terracotta-100">
+              <p class="text-[10px] text-cocoa-600">위시</p>
+              <p id="stat-wish" class="text-sm font-bold font-num text-terracotta-500">0개</p>
+            </div>
+          </div>
+        </div>
+        <!-- 프로그레스 바 -->
+        <div class="w-full h-2.5 bg-cream-100 rounded-full overflow-hidden">
+          <div id="stat-bar" class="h-full bg-gradient-to-r from-sage-400 to-sage-500 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 검색 및 필터 영역 -->
+    <section class="px-5 pt-3 pb-2 space-y-3">
+      <!-- 검색바 -->
+      <div class="relative">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="이름, 시리즈, 애칭으로 검색해보세요..." 
+          oninput="handleSearch(this.value)"
+          class="w-full bg-white text-sm text-cocoa-800 placeholder-cocoa-600/50 pl-10 pr-9 py-2.5 rounded-2xl border border-cream-200 focus:outline-none focus:border-sage-400 focus:ring-2 focus:ring-sage-100 transition shadow-sm"
+        />
+        <svg class="w-4 h-4 text-cocoa-600/60 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-cocoa-600/60 hover:text-cocoa-800 p-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 상태 필터 탭 (전체 / 보유중 / 위시리스트 / 미보유) -->
+      <div class="grid grid-cols-4 gap-1.5 bg-cream-100 p-1 rounded-2xl">
+        <button onclick="setStatusFilter('all')" data-status="all" class="status-tab py-1.5 text-xs font-semibold rounded-xl transition bg-white text-cocoa-800 shadow-sm">전체</button>
+        <button onclick="setStatusFilter('owned')" data-status="owned" class="status-tab py-1.5 text-xs font-medium rounded-xl transition text-cocoa-600 hover:text-cocoa-800">보유중</button>
+        <button onclick="setStatusFilter('wish')" data-status="wish" class="status-tab py-1.5 text-xs font-medium rounded-xl transition text-cocoa-600 hover:text-cocoa-800">위시 ♥</button>
+        <button onclick="setStatusFilter('unowned')" data-status="unowned" class="status-tab py-1.5 text-xs font-medium rounded-xl transition text-cocoa-600 hover:text-cocoa-800">미보유</button>
+      </div>
+
+      <!-- 카테고리 필터 알약 버튼 -->
+      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <button onclick="setCategoryFilter('전체')" data-cat="전체" class="cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cocoa-700 text-cream-50 transition">전체</button>
+        <button onclick="setCategoryFilter('가족')" data-cat="가족" class="cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-cocoa-600 border border-cream-200 hover:bg-cream-100 transition">🐰 가족</button>
+        <button onclick="setCategoryFilter('아기')" data-cat="아기" class="cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-cocoa-600 border border-cream-200 hover:bg-cream-100 transition">🍼 아기·블라인드</button>
+        <button onclick="setCategoryFilter('하우스/가구')" data-cat="하우스/가구" class="cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-cocoa-600 border border-cream-200 hover:bg-cream-100 transition">🏡 하우스·가구</button>
+        <button onclick="setCategoryFilter('소품')" data-cat="소품" class="cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-cocoa-600 border border-cream-200 hover:bg-cream-100 transition">🎀 소품·의상</button>
+      </div>
+    </section>
+
+    <!-- 도감 카드 그리드 리스트 -->
+    <main class="px-5 pt-2 flex-1">
+      <div id="catalog-grid" class="grid grid-cols-2 gap-3.5">
+        <!-- 자바스크립트로 카드가 렌더링됩니다 -->
+      </div>
+
+      <!-- 검색/필터 결과 없음 안내 -->
+      <div id="empty-state" class="hidden flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-full bg-cream-100 flex items-center justify-center text-3xl mb-3">🧺</div>
+        <p class="text-sm font-semibold text-cocoa-700">조건에 맞는 실바니안이 없어요</p>
+        <p class="text-xs text-cocoa-600 mt-1">다른 검색어를 입력하거나 새 친구를 등록해보세요!</p>
+      </div>
+    </main>
+
+    <!-- 하단 플로팅 추가 버튼 -->
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-5 pointer-events-none flex justify-end z-30">
+      <button 
+        onclick="openAddModal()" 
+        class="pointer-events-auto flex items-center gap-2 bg-terracotta-500 hover:bg-terracotta-600 text-white font-semibold px-5 py-3.5 rounded-full shadow-float transition transform active:scale-95"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span class="text-sm">새 실바니안 등록</span>
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 모달 1: 추가 / 수정 / 상세보기 모달          -->
+    <!-- ========================================== -->
+    <div id="item-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-cocoa-800/45 backdrop-blur-xs animate-fade-in">
+      <div class="bg-cream-50 w-full max-w-[480px] max-h-[92vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+        
+        <!-- 모달 상단 바 -->
+        <div class="px-5 py-4 bg-white border-b border-cream-200 flex items-center justify-between">
+          <h2 id="modal-title" class="text-base font-bold text-cocoa-800">새 실바니안 등록</h2>
+          <div class="flex items-center gap-1">
+            <button id="delete-item-btn" type="button" onclick="confirmDeleteItem()" class="hidden p-2 text-terracotta-500 hover:bg-terracotta-100 rounded-xl transition" title="삭제하기">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+            <button type="button" onclick="closeItemModal()" class="p-2 text-cocoa-600 hover:bg-cream-100 rounded-xl transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 모달 폼 스크롤 영역 -->
+        <form id="item-form" onsubmit="saveItem(event)" class="p-5 overflow-y-auto space-y-4 flex-1">
+          <input type="hidden" id="item-id" />
+
+          <!-- 사진 업로드 영역 -->
+          <div class="flex flex-col items-center">
+            <div class="relative group w-36 h-36 rounded-3xl bg-white border-2 border-dashed border-cream-300 overflow-hidden flex items-center justify-center shadow-inner cursor-pointer" onclick="document.getElementById('photo-input').click()">
+              <img id="photo-preview" src="" alt="미리보기" class="hidden w-full h-full object-cover" />
+              <div id="photo-placeholder" class="flex flex-col items-center text-center p-3">
+                <span class="text-3xl mb-1" id="preview-emoji">🐰</span>
+                <span class="text-xs font-medium text-cocoa-600">사진 올리기</span>
+                <span class="text-[10px] text-cocoa-600/60 mt-0.5">터치하여 앨범/카메라</span>
+              </div>
+              <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-semibold">
+                사진 변경
+              </div>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
+            <button type="button" id="remove-photo-btn" onclick="removePhoto()" class="hidden mt-1.5 text-xs text-terracotta-500 hover:underline">기본 일러스트로 되돌리기</button>
+          </div>
+
+          <!-- 수집 상태 선택 (3단 버튼) -->
+          <div>
+            <label class="block text-xs font-semibold text-cocoa-700 mb-1.5">수집 상태</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="cursor-pointer">
+                <input type="radio" name="status" value="owned" class="peer hidden" checked onchange="handleModalStatusChange()" />
+                <div class="py-2.5 text-center rounded-2xl border border-cream-200 bg-white text-xs font-medium text-cocoa-600 peer-checked:bg-sage-500 peer-checked:text-white peer-checked:border-sage-500 transition shadow-xs">
+                  ✅ 보유중
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="status" value="wish" class="peer hidden" onchange="handleModalStatusChange()" />
+                <div class="py-2.5 text-center rounded-2xl border border-cream-200 bg-white text-xs font-medium text-cocoa-600 peer-checked:bg-terracotta-500 peer-checked:text-white peer-checked:border-terracotta-500 transition shadow-xs">
+                  ♥ 위시리스트
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="status" value="unowned" class="peer hidden" onchange="handleModalStatusChange()" />
+                <div class="py-2.5 text-center rounded-2xl border border-cream-200 bg-white text-xs font-medium text-cocoa-600 peer-checked:bg-cocoa-700 peer-checked:text-white peer-checked:border-cocoa-700 transition shadow-xs">
+                  ☁️ 미보유
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 보유 수량 카운터 (보유중 선택 시 표시) -->
+          <div id="modal-count-box" class="bg-sage-100/60 border border-sage-200 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-cocoa-800">보유 수량 (중복 포함)</span>
+              <p class="text-[10px] text-cocoa-600">쌍둥이나 블라인드 중복 개수를 기록해요</p>
+            </div>
+            <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-xl border border-sage-200 shadow-2xs">
+              <button type="button" onclick="adjustModalCount(-1)" class="w-7 h-7 rounded-lg bg-cream-100 hover:bg-cream-200 text-cocoa-800 font-bold flex items-center justify-center transition active:scale-90">-</button>
+              <input type="number" id="item-count" min="1" max="99" value="1" class="w-8 text-center text-sm font-bold font-num text-cocoa-800 focus:outline-none bg-transparent" readonly />
+              <button type="button" onclick="adjustModalCount(1)" class="w-7 h-7 rounded-lg bg-sage-500 hover:bg-sage-600 text-white font-bold flex items-center justify-center transition active:scale-90">+</button>
+            </div>
+          </div>
+
+          <!-- 이름 (필수) -->
+          <div>
+            <label for="item-name" class="block text-xs font-semibold text-cocoa-700 mb-1">이름 <span class="text-terracotta-500">*</span></label>
+            <input type="text" id="item-name" required placeholder="예: 초콜릿 토끼 아기 크림" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm focus:outline-none focus:border-sage-400" />
+          </div>
+
+          <!-- 시리즈 및 카테고리 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="item-category" class="block text-xs font-semibold text-cocoa-700 mb-1">카테고리</label>
+              <select id="item-category" onchange="updatePlaceholderEmoji()" class="w-full px-3 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm focus:outline-none focus:border-sage-400">
+                <option value="가족">🐰 가족</option>
+                <option value="아기">🍼 아기·블라인드</option>
+                <option value="하우스/가구">🏡 하우스·가구</option>
+                <option value="소품">🎀 소품·의상</option>
+              </select>
+            </div>
+            <div>
+              <label for="item-series" class="block text-xs font-semibold text-cocoa-700 mb-1">시리즈 / 패밀리</label>
+              <input type="text" id="item-series" placeholder="예: 아기 놀이공원" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm focus:outline-none focus:border-sage-400" />
+            </div>
+          </div>
+
+          <!-- 입양일(구매일) & 가격 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="item-date" class="block text-xs font-semibold text-cocoa-700 mb-1">입양일 (구매일)</label>
+              <input type="date" id="item-date" class="w-full px-3 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm font-num focus:outline-none focus:border-sage-400" />
+            </div>
+            <div>
+              <label for="item-price" class="block text-xs font-semibold text-cocoa-700 mb-1">가격 (원)</label>
+              <input type="number" id="item-price" placeholder="예: 8500" class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm font-num focus:outline-none focus:border-sage-400" />
+            </div>
+          </div>
+
+          <!-- 개인 메모 / 애칭 -->
+          <div>
+            <label for="item-memo" class="block text-xs font-semibold text-cocoa-700 mb-1">나만의 메모 · 애칭</label>
+            <textarea id="item-memo" rows="2" placeholder="구매처, 지어준 애칭, 특징 등을 자유롭게 적어주세요." class="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-cream-200 text-sm focus:outline-none focus:border-sage-400 resize-none"></textarea>
+          </div>
+
+          <!-- 저장 버튼 -->
+          <div class="pt-2 pb-2">
+            <button type="submit" class="w-full py-3.5 rounded-2xl bg-sage-500 hover:bg-sage-600 text-white font-bold text-sm shadow-md transition active:scale-98">
+              도감에 저장하기
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 모달 2: 백업 및 데이터 관리 모달             -->
+    <!-- ========================================== -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-cocoa-800/45 backdrop-blur-xs animate-fade-in">
+      <div class="bg-cream-50 w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-cream-200 pb-3">
+          <h2 class="text-base font-bold text-cocoa-800">도감 데이터 관리</h2>
+          <button onclick="closeSettingsModal()" class="p-1.5 text-cocoa-600 hover:bg-cream-100 rounded-xl">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <p class="text-xs text-cocoa-600 leading-relaxed bg-white p-3.5 rounded-2xl border border-cream-200">
+          모든 도감 데이터와 사진은 현재 기기의 브라우저에 안전하게 자동 저장됩니다. 기기를 변경하거나 브라우저 캐시를 지우기 전에는 아래 백업 파일로 내보내 보관하세요!
+        </p>
+
+        <!-- 설정 내 도감 이름 변경 -->
+        <div class="bg-white p-3.5 rounded-2xl border border-cream-200 space-y-2">
+          <label for="settings-title-input" class="block text-xs font-bold text-cocoa-800">🏷️ 도감 이름 설정</label>
+          <div class="flex gap-2">
+            <input type="text" id="settings-title-input" maxlength="20" placeholder="예: 민지의 실바니안 숲" class="flex-1 px-3 py-2 rounded-xl bg-cream-50 border border-cream-200 text-xs text-cocoa-800 focus:outline-none focus:border-sage-400" />
+            <button type="button" onclick="saveTitleFromSettings()" class="px-3.5 py-2 rounded-xl bg-sage-500 hover:bg-sage-600 text-white text-xs font-semibold transition">변경</button>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <button onclick="exportData()" class="w-full flex items-center justify-between px-4 py-3.5 bg-white hover:bg-cream-100 rounded-2xl border border-cream-200 text-sm font-semibold text-cocoa-800 transition">
+            <span class="flex items-center gap-2.5"><span>📤</span> 도감 백업 파일 내보내기 (JSON)</span>
+            <span class="text-xs text-sage-600">다운로드</span>
+          </button>
+
+          <label class="w-full flex items-center justify-between px-4 py-3.5 bg-white hover:bg-cream-100 rounded-2xl border border-cream-200 text-sm font-semibold text-cocoa-800 transition cursor-pointer">
+            <span class="flex items-center gap-2.5"><span>📥</span> 백업 파일 불러오기 (복원)</span>
+            <span class="text-xs text-terracotta-500">파일 선택</span>
+            <input type="file" accept=".json" class="hidden" onchange="importData(event)" />
+          </label>
+
+          <button onclick="resetToSampleData()" class="w-full flex items-center justify-between px-4 py-3.5 bg-cream-100 hover:bg-cream-200 rounded-2xl text-xs font-medium text-cocoa-600 transition mt-2">
+            <span class="flex items-center gap-2"><span>🔄</span> 기본 샘플 데이터로 초기화</span>
+            <span>초기화</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 모달 3: 도감 이름 빠른 변경 모달            -->
+    <!-- ========================================== -->
+    <div id="title-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-cocoa-800/50 px-6 animate-fade-in">
+      <form onsubmit="saveTitleFromQuickModal(event)" class="bg-white w-full max-w-[340px] rounded-3xl p-5 shadow-2xl space-y-4">
+        <div class="text-center">
+          <div class="w-11 h-11 rounded-2xl bg-terracotta-100 text-terracotta-500 flex items-center justify-center mx-auto text-xl mb-2">✏️</div>
+          <h3 class="text-base font-bold text-cocoa-800">도감 이름 바꾸기</h3>
+          <p class="text-xs text-cocoa-600 mt-0.5">나만의 애칭이 담긴 도감 이름을 지어보세요</p>
+        </div>
+        <input type="text" id="quick-title-input" maxlength="20" required placeholder="예: 초코토끼의 비밀 도감" class="w-full px-3.5 py-2.5 rounded-2xl bg-cream-50 border border-cream-200 text-sm text-center font-semibold text-cocoa-800 focus:outline-none focus:border-sage-400" />
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" onclick="closeTitleEditModal()" class="py-2.5 rounded-2xl bg-cream-100 text-cocoa-700 text-xs font-semibold hover:bg-cream-200 transition">취소</button>
+          <button type="submit" class="py-2.5 rounded-2xl bg-sage-500 text-white text-xs font-semibold hover:bg-sage-600 transition">저장하기</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 커스텀 확인 대화상자 (confirm 대체)          -->
+    <!-- ========================================== -->
+    <div id="confirm-dialog" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-cocoa-800/50 px-6 animate-fade-in">
+      <div class="bg-white w-full max-w-[340px] rounded-3xl p-5 shadow-2xl text-center space-y-4">
+        <div class="w-12 h-12 rounded-full bg-terracotta-100 text-terracotta-500 flex items-center justify-center mx-auto text-xl">🍂</div>
+        <div>
+          <h3 id="confirm-title" class="text-base font-bold text-cocoa-800">정말 삭제할까요?</h3>
+          <p id="confirm-desc" class="text-xs text-cocoa-600 mt-1">삭제된 도감 기록은 되돌릴 수 없습니다.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button onclick="closeConfirmDialog()" class="py-2.5 rounded-2xl bg-cream-100 text-cocoa-700 text-xs font-semibold hover:bg-cream-200 transition">취소</button>
+          <button id="confirm-yes-btn" class="py-2.5 rounded-2xl bg-terracotta-500 text-white text-xs font-semibold hover:bg-terracotta-600 transition">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 토스트 알림 메시지 -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-cocoa-800/95 text-cream-50 text-xs font-medium px-4 py-2.5 rounded-full shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50 whitespace-nowrap">
+      메시지
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 초기 샘플 데이터 및 상태 변수 설정
+    // ==========================================
+    const STORAGE_KEY = 'sylvanian_personal_catalog_v1';
+    const TITLE_STORAGE_KEY = 'sylvanian_catalog_title_v1';
+    const DEFAULT_TITLE = '나의 실바니안 도감';
+
+    const SAMPLE_ITEMS = [
+      {
+        id: 'sample-1',
+        name: '초콜릿 토끼 아기 크림',
+        series: '초콜릿 토끼 패밀리',
+        category: '아기',
+        status: 'owned',
+        count: 2,
+        date: '2026-03-15',
+        price: 7500,
+        memo: '가장 먼저 입양한 첫 실바니안! 너무 귀여워서 쌍둥이로 한 명 더 입양함.',
+        image: ''
+      },
+      {
+        id: 'sample-2',
+        name: '라떼 고양이 패밀리 세트',
+        series: '라떼 고양이 가족',
+        category: '가족',
+        status: 'owned',
+        count: 1,
+        date: '2026-05-02',
+        price: 34000,
+        memo: '부드러운 크림색 털과 체크무늬 의상이 포인트.',
+        image: ''
+      },
+      {
+        id: 'sample-3',
+        name: '아기 숲속 요정 블라인드 백 (시크릿)',
+        series: '아기 숲속 요정 시리즈',
+        category: '아기',
+        status: 'wish',
+        count: 0,
+        date: '',
+        price: 6900,
+        memo: '이슬 요정 아기 꼭 뽑고 싶다!',
+        image: ''
+      },
+      {
+        id: 'sample-4',
+        name: '빨간 지붕 이층집 스페셜',
+        series: '타운 & 하우스',
+        category: '하우스/가구',
+        status: 'owned',
+        count: 1,
+        date: '2026-08-20',
+        price: 78000,
+        memo: '불이 들어오는 램프가 있어서 밤에 켜두면 분위기 최고.',
+        image: ''
+      },
+      {
+        id: 'sample-5',
+        name: '사막여우 쌍둥이 아기',
+        series: '사막여우 패밀리',
+        category: '아기',
+        status: 'unowned',
+        count: 0,
+        date: '',
+        price: 12000,
+        memo: '큰 귀가 매력적인 사막여우 아기들.',
+        image: ''
+      },
+      {
+        id: 'sample-6',
+        name: '숲속 베이커리 오븐 & 빵 소품 세트',
+        series: '마을 상점 시리즈',
+        category: '소품',
+        status: 'wish',
+        count: 0,
+        date: '',
+        price: 19500,
+        memo: '토끼 모양 식빵 디테일이 미쳤음.',
+        image: ''
+      }
+    ];
+
+    let catalog = [];
+    let catalogTitle = DEFAULT_TITLE;
+    let currentStatusFilter = 'all';
+    let currentCategoryFilter = '전체';
+    let currentSearchQuery = '';
+    let currentUploadedImage = ''; // Base64 compressed image string
+    let pendingConfirmAction = null;
+
+    // 카테고리별 파스텔 테마 및 일러스트 아이콘 매핑
+    const CATEGORY_META = {
+      '가족': { emoji: '🐰', bg: 'bg-[#F9EFEA]', accent: 'text-[#C96F59]' },
+      '아기': { emoji: '🍼', bg: 'bg-[#EEF4EE]', accent: 'text-[#53775B]' },
+      '하우스/가구': { emoji: '🏡', bg: 'bg-[#F7F1E3]', accent: 'text-[#9A7B4F]' },
+      '소품': { emoji: '🎀', bg: 'bg-[#F5ECF2]', accent: 'text-[#9E6B8E]' }
+    };
+
+    // ==========================================
+    // 2. 초기화 및 로컬 스토리지 연동
+    // ==========================================
+    function initApp() {
+      try {
+        const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY);
+        if (savedTitle && savedTitle.trim()) {
+          catalogTitle = savedTitle.trim();
+        }
+        applyCatalogTitleUI();
+
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          catalog = JSON.parse(saved).map(item => ({
+            ...item,
+            count: item.status === 'owned' ? (Number(item.count) >= 1 ? Number(item.count) : 1) : 0
+          }));
+        } else {
+          catalog = [...SAMPLE_ITEMS];
+          saveToStorage();
+        }
+      } catch (e) {
+        console.error('데이터 로드 실패:', e);
+        catalog = [...SAMPLE_ITEMS];
+      }
+      renderAll();
+    }
+
+    function applyCatalogTitleUI() {
+      document.getElementById('app-title-display').textContent = catalogTitle;
+      document.title = catalogTitle;
+    }
+
+    function saveCatalogTitle(newTitle) {
+      const trimmed = newTitle.trim();
+      if (!trimmed) return;
+      catalogTitle = trimmed;
+      localStorage.setItem(TITLE_STORAGE_KEY, catalogTitle);
+      applyCatalogTitleUI();
+      showToast(`도감 이름이 '${catalogTitle}'(으)로 변경되었어요 ✨`);
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(catalog));
+      } catch (e) {
+        showToast('저장 공간이 부족해요! 불필요한 사진을 줄여주세요.');
+      }
+    }
+
+    // ==========================================
+    // 3. 통계 및 그리드 렌더링
+    // ==========================================
+    function renderAll() {
+      updateStats();
+      renderGrid();
+    }
+
+    function updateStats() {
+      const total = catalog.length;
+      const ownedItems = catalog.filter(item => item.status === 'owned');
+      const ownedSpecies = ownedItems.length;
+      const totalOwnedCount = ownedItems.reduce((sum, item) => sum + (Number(item.count) || 1), 0);
+      const wish = catalog.filter(item => item.status === 'wish').length;
+      const percent = total === 0 ? 0 : Math.round((ownedSpecies / total) * 100);
+
+      document.getElementById('stat-percent').textContent = `${percent}%`;
+      document.getElementById('stat-fraction').textContent = `(${ownedSpecies} / ${total}종)`;
+      document.getElementById('stat-total-count').textContent = `${totalOwnedCount}개`;
+      document.getElementById('stat-wish').textContent = `${wish}개`;
+      document.getElementById('stat-bar').style.width = `${percent}%`;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('catalog-grid');
+      const emptyState = document.getElementById('empty-state');
+
+      // 필터링 적용
+      const filtered = catalog.filter(item => {
+        const matchStatus = currentStatusFilter === 'all' || item.status === currentStatusFilter;
+        const matchCategory = currentCategoryFilter === '전체' || item.category === currentCategoryFilter;
+        const q = currentSearchQuery.trim().toLowerCase();
+        const matchQuery = !q || 
+          item.name.toLowerCase().includes(q) || 
+          (item.series && item.series.toLowerCase().includes(q)) ||
+          (item.memo && item.memo.toLowerCase().includes(q));
+        return matchStatus && matchCategory && matchQuery;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      grid.innerHTML = filtered.map(item => {
+        const isOwned = item.status === 'owned';
+        const isWish = item.status === 'wish';
+        const count = isOwned ? (Number(item.count) || 1) : 0;
+        const meta = CATEGORY_META[item.category] || CATEGORY_META['가족'];
+
+        // 썸네일 영역 (사용자 사진 또는 파스텔 SVG 일러스트 카드)
+        const thumbnailHTML = item.image
+          ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" class="w-full h-full object-cover ${isOwned ? 'owned-filter' : 'unowned-filter'}" />`
+          : `<div class="w-full h-full ${meta.bg} flex flex-col items-center justify-center relative overflow-hidden ${isOwned ? 'owned-filter' : 'unowned-filter'}">
+              <!-- 은은한 도트 배경 장식 -->
+              <div class="absolute -right-3 -bottom-3 w-16 h-16 rounded-full bg-white/40"></div>
+              <div class="absolute -left-2 -top-2 w-10 h-10 rounded-full bg-white/30"></div>
+              <span class="text-4xl drop-shadow-xs select-none transform group-hover:scale-110 transition-transform duration-300">${meta.emoji}</span>
+              <span class="text-[10px] font-medium ${meta.accent} mt-1.5 opacity-80">${escapeHtml(item.category)}</span>
+            </div>`;
+
+        return `
+          <article 
+            onclick="openEditModal('${item.id}')" 
+            class="group bg-white rounded-3xl overflow-hidden shadow-card border ${isOwned ? 'border-sage-200/90' : 'border-cream-200/80'} flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <!-- 카드 상단 이미지 영역 -->
+            <div class="relative aspect-square w-full bg-cream-100 overflow-hidden">
+              ${thumbnailHTML}
+
+              <!-- 좌상단 상태 및 중복 뱃지 -->
+              <div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+                ${isOwned 
+                  ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sage-500/95 text-white shadow-xs">✓ 보유중</span>`
+                  : isWish
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-terracotta-500/95 text-white shadow-xs">♥ 위시</span>`
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-cocoa-800/60 text-white backdrop-blur-xs">미보유</span>`
+                }
+                ${isOwned && count >= 2 
+                  ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-extrabold font-num bg-amber-400 text-cocoa-800 shadow-xs">×${count}</span>`
+                  : ''
+                }
+              </div>
+
+              <!-- 우상단 원터치 위시리스트 하트 버튼 -->
+              <button 
+                type="button"
+                onclick="toggleQuickWish(event, '${item.id}')"
+                aria-label="위시리스트 토글"
+                class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs shadow-xs flex items-center justify-center transition active:scale-90 ${isWish ? 'text-terracotta-500' : 'text-cocoa-600/40 hover:text-terracotta-400'}"
+              >
+                <svg class="w-4 h-4" fill="${isWish ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 카드 하단 정보 영역 -->
+            <div class="p-3 flex-1 flex flex-col justify-between">
+              <div>
+                <p class="text-[10px] font-medium text-cocoa-600/80 truncate">${escapeHtml(item.series || item.category)}</p>
+              <!-- 하단 빠른 보유 토글 / 수량 카운터 -->
+              <div class="mt-2.5 pt-2 border-t border-cream-100 flex items-center justify-between">
+                <span class="text-[10px] text-cocoa-600/70 font-num">${item.date ? item.date.slice(2).replace(/-/g, '.') : '미등록'}</span>
+                ${isOwned 
+                  ? `<div onclick="event.stopPropagation()" class="inline-flex items-center bg-sage-100/90 rounded-xl p-0.5 border border-sage-200/80">
+                      <button type="button" onclick="changeItemCount(event, '${item.id}', -1)" aria-label="수량 감소" class="w-5 h-5 rounded-lg bg-white text-cocoa-700 hover:bg-cream-100 font-bold text-xs flex items-center justify-center transition active:scale-90">-</button>
+                      <span class="px-2 text-[11px] font-bold font-num text-sage-600">${count}</span>
+                      <button type="button" onclick="changeItemCount(event, '${item.id}', 1)" aria-label="수량 증가" class="w-5 h-5 rounded-lg bg-sage-500 text-white hover:bg-sage-600 font-bold text-xs flex items-center justify-center transition active:scale-90">+</button>
+                    </div>`
+                  : `<button 
+                      type="button"
+                      onclick="toggleQuickOwned(event, '${item.id}')"
+                      class="px-2.5 py-1 rounded-xl text-[11px] font-semibold transition bg-cream-100 text-cocoa-600 hover:bg-cream-200"
+                    >
+                      + 입양체크
+                    </button>`
+                }
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 4. 필터링 및 원터치 상태 토글 액션
+    // ==========================================
+    function setStatusFilter(status) {
+      currentStatusFilter = status;
+      document.querySelectorAll('.status-tab').forEach(btn => {
+        if (btn.dataset.status === status) {
+          btn.className = 'status-tab py-1.5 text-xs font-semibold rounded-xl transition bg-white text-cocoa-800 shadow-sm';
+        } else {
+          btn.className = 'status-tab py-1.5 text-xs font-medium rounded-xl transition text-cocoa-600 hover:text-cocoa-800';
+        }
+      });
+      renderGrid();
+    }
+
+    function setCategoryFilter(category) {
+      currentCategoryFilter = category;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.dataset.cat === category) {
+          btn.className = 'cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cocoa-700 text-cream-50 transition';
+        } else {
+          btn.className = 'cat-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-cocoa-600 border border-cream-200 hover:bg-cream-100 transition';
+        }
+      });
+      renderGrid();
+    }
+
+    function handleSearch(val) {
+      currentSearchQuery = val;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (val.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderGrid();
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      handleSearch('');
+    }
+
+    function toggleQuickOwned(event, id) {
+      event.stopPropagation();
+      const item = catalog.find(i => i.id === id);
+      if (!item) return;
+
+      if (item.status === 'owned') {
+        item.status = 'unowned';
+        item.count = 0;
+        showToast('미보유 상태로 변경되었어요.');
+      } else {
+        item.status = 'owned';
+        item.count = 1;
+        if (!item.date) {
+          item.date = new Date().toISOString().split('T')[0];
+        }
+        showToast(`🎉 '${item.name}' 도감에 등록 완료!`);
+      }
+      saveToStorage();
+      renderAll();
+    }
+
+    function changeItemCount(event, id, delta) {
+      event.stopPropagation();
+      const item = catalog.find(i => i.id === id);
+      if (!item) return;
+
+      const currentCount = Number(item.count) || 1;
+      const nextCount = currentCount + delta;
+
+      if (nextCount <= 0) {
+        item.status = 'unowned';
+        item.count = 0;
+        showToast(`'${item.name}' 수량이 0이 되어 미보유로 전환되었어요.`);
+      } else {
+        item.count = nextCount;
+        if (delta > 0) {
+          showToast(`✨ '${item.name}' 보유 수량: ${nextCount}개`);
+        }
+      }
+      saveToStorage();
+      renderAll();
+    }
+
+    function toggleQuickWish(event, id) {
+      event.stopPropagation();
+      const item = catalog.find(i => i.id === id);
+      if (!item) return;
+
+      if (item.status === 'wish') {
+        item.status = 'unowned';
+        item.count = 0;
+        showToast('위시리스트에서 해제했어요.');
+      } else {
+        item.status = 'wish';
+        item.count = 0;
+        showToast(`♥ '${item.name}' 위시리스트에 담았어요!`);
+      }
+      saveToStorage();
+      renderAll();
+    }
+
+    // ==========================================
+    // 5. 이미지 업로드 및 자동 압축 (LocalStorage 최적화)
+    // ==========================================
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // 최대 400px 크기로 리사이징 및 JPEG 0.78 압축하여 용량 최소화
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          currentUploadedImage = canvas.toDataURL('image/jpeg', 0.78);
+          updatePhotoPreviewUI(currentUploadedImage);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updatePhotoPreviewUI(imgData) {
+      const preview = document.getElementById('photo-preview');
+      const placeholder = document.getElementById('photo-placeholder');
+      const removeBtn = document.getElementById('remove-photo-btn');
+
+      if (imgData) {
+        preview.src = imgData;
+        preview.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        removeBtn.classList.remove('hidden');
+      } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        removeBtn.classList.add('hidden');
+      }
+    }
+
+    function removePhoto() {
+      currentUploadedImage = '';
+      document.getElementById('photo-input').value = '';
+      updatePhotoPreviewUI('');
+    }
+
+    function updatePlaceholderEmoji() {
+      const cat = document.getElementById('item-category').value;
+      const meta = CATEGORY_META[cat] || CATEGORY_META['가족'];
+      document.getElementById('preview-emoji').textContent = meta.emoji;
+    }
+
+    // ==========================================
+    // 6. 등록 / 수정 / 삭제 모달 제어
+    // ==========================================
+    function handleModalStatusChange() {
+      const selectedStatus = document.querySelector('input[name="status"]:checked').value;
+      const countBox = document.getElementById('modal-count-box');
+      const countInput = document.getElementById('item-count');
+      if (selectedStatus === 'owned') {
+        countBox.classList.remove('hidden');
+        if (Number(countInput.value) < 1) countInput.value = 1;
+      } else {
+        countBox.classList.add('hidden');
+      }
+    }
+
+    function adjustModalCount(delta) {
+      const countInput = document.getElementById('item-count');
+      const current = Number(countInput.value) || 1;
+      const next = Math.max(1, Math.min(99, current + delta));
+      countInput.value = next;
+    }
+
+    function openAddModal() {
+      document.getElementById('modal-title').textContent = '새 실바니안 등록';
+      document.getElementById('delete-item-btn').classList.add('hidden');
+      document.getElementById('item-form').reset();
+      document.getElementById('item-id').value = '';
+      document.getElementById('item-count').value = 1;
+      document.getElementById('item-date').value = new Date().toISOString().split('T')[0];
+      
+      currentUploadedImage = '';
+      updatePhotoPreviewUI('');
+      updatePlaceholderEmoji();
+      handleModalStatusChange();
+      
+      document.getElementById('item-modal').classList.remove('hidden');
+    }
+
+    function openEditModal(id) {
+      const item = catalog.find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('modal-title').textContent = '실바니안 상세 및 수정';
+      document.getElementById('delete-item-btn').classList.remove('hidden');
+      
+      document.getElementById('item-id').value = item.id;
+      document.getElementById('item-name').value = item.name;
+      document.getElementById('item-category').value = item.category;
+      document.getElementById('item-series').value = item.series || '';
+      document.getElementById('item-date').value = item.date || '';
+      document.getElementById('item-price').value = item.price || '';
+      document.getElementById('item-memo').value = item.memo || '';
+      document.getElementById('item-count').value = item.status === 'owned' ? (Number(item.count) || 1) : 1;
+
+      const statusRadio = document.querySelector(`input[name="status"][value="${item.status}"]`);
+      if (statusRadio) statusRadio.checked = true;
+
+      currentUploadedImage = item.image || '';
+      updatePhotoPreviewUI(currentUploadedImage);
+      updatePlaceholderEmoji();
+      handleModalStatusChange();
+
+      document.getElementById('item-modal').classList.remove('hidden');
+    }
+
+    function closeItemModal() {
+      document.getElementById('item-modal').classList.add('hidden');
+    }
+
+    function saveItem(event) {
+      event.preventDefault();
+      const id = document.getElementById('item-id').value;
+      const name = document.getElementById('item-name').value.trim();
+      const category = document.getElementById('item-category').value;
+      const series = document.getElementById('item-series').value.trim();
+      const status = document.querySelector('input[name="status"]:checked').value;
+      const count = status === 'owned' ? (Number(document.getElementById('item-count').value) || 1) : 0;
+      const date = document.getElementById('item-date').value;
+      const price = document.getElementById('item-price').value;
+      const memo = document.getElementById('item-memo').value.trim();
+
+      if (!name) return;
+
+      if (id) {
+        // 기존 항목 수정
+        const idx = catalog.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          catalog[idx] = {
+            ...catalog[idx],
+            name, category, series, status, count, date, price, memo,
+            image: currentUploadedImage
+          };
+          showToast('수정 내용이 저장되었어요 ✨');
+        }
+      } else {
+        // 신규 등록
+        const newItem = {
+          id: 'item-' + Date.now(),
+          name, category, series, status, count, date, price, memo,
+          image: currentUploadedImage
+        };
+        catalog.unshift(newItem);
+        showToast('새로운 친구가 도감에 등록되었어요! 🐰');
+      }
+
+      saveToStorage();
+      renderAll();
+      closeItemModal();
+    }
+
+    function confirmDeleteItem() {
+      const id = document.getElementById('item-id').value;
+      if (!id) return;
+
+      openConfirmDialog('이 기록을 삭제할까요?', '도감에서 영구적으로 삭제됩니다.', () => {
+        catalog = catalog.filter(i => i.id !== id);
+        saveToStorage();
+        renderAll();
+        closeItemModal();
+        showToast('도감에서 삭제되었습니다.');
+      });
+    }
+
+    // ==========================================
+    // 7. 백업 / 복원 / 도감 이름 / 샘플 초기화 기능
+    // ==========================================
+    function openTitleEditModal() {
+      const input = document.getElementById('quick-title-input');
+      input.value = catalogTitle;
+      document.getElementById('title-modal').classList.remove('hidden');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closeTitleEditModal() {
+      document.getElementById('title-modal').classList.add('hidden');
+    }
+
+    function saveTitleFromQuickModal(event) {
+      event.preventDefault();
+      const val = document.getElementById('quick-title-input').value;
+      saveCatalogTitle(val);
+      closeTitleEditModal();
+    }
+
+    function saveTitleFromSettings() {
+      const val = document.getElementById('settings-title-input').value;
+      saveCatalogTitle(val);
+    }
+
+    function openSettingsModal() {
+      document.getElementById('settings-title-input').value = catalogTitle;
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function exportData() {
+      const backupPayload = {
+        title: catalogTitle,
+        exportedAt: new Date().toISOString(),
+        items: catalog
+      };
+      const dataStr = JSON.stringify(backupPayload, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const today = new Date().toISOString().split('T')[0];
+      a.href = url;
+      a.download = `sylvanian_catalog_backup_${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('백업 파일이 다운로드되었어요 📦');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const importedItems = Array.isArray(parsed) ? parsed : parsed.items;
+          if (Array.isArray(importedItems)) {
+            catalog = importedItems.map(item => ({
+              ...item,
+              count: item.status === 'owned' ? (Number(item.count) >= 1 ? Number(item.count) : 1) : 0
+            }));
+            if (parsed.title && typeof parsed.title === 'string') {
+              saveCatalogTitle(parsed.title);
+            }
+            saveToStorage();
+            renderAll();
+            closeSettingsModal();
+            showToast(`총 ${catalog.length}종의 도감 데이터를 복원했어요!`);
+          } else {
+            showToast('올바른 도감 백업 파일이 아닙니다.');
+          }
+        } catch (err) {
+          showToast('파일을 읽는 중 오류가 발생했어요.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function resetToSampleData() {
+      openConfirmDialog('샘플 데이터로 초기화할까요?', '현재 저장된 모든 데이터가 기본 샘플 6종으로 대체됩니다.', () => {
+        catalog = [...SAMPLE_ITEMS];
+        saveToStorage();
+        renderAll();
+        closeSettingsModal();
+        showToast('기본 샘플 도감으로 초기화되었습니다.');
+      });
+    }
+
+    // ==========================================
+    // 8. 유틸리티 (커스텀 Confirm & Toast & XSS 방지)
+    // ==========================================
+    function openConfirmDialog(title, desc, onConfirm) {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-desc').textContent = desc;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirm-dialog').classList.remove('hidden');
+    }
+
+    function closeConfirmDialog() {
+      document.getElementById('confirm-dialog').classList.add('hidden');
+      pendingConfirmAction = null;
+    }
+
+    document.getElementById('confirm-yes-btn').addEventListener('click', () => {
+      if (typeof pendingConfirmAction === 'function') {
+        pendingConfirmAction();
+      }
+      closeConfirmDialog();
+    });
+
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0');
+      }, 2400);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 앱 시작
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
